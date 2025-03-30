@@ -2,6 +2,8 @@
 
 # 3D Data Visualization Dashboard
 
+[![Netlify Status](https://api.netlify.com/api/v1/badges/90a1bd53-675a-44e1-8834-933ad4739dea/deploy-status)](https://app.netlify.com/sites/3d-data/deploys)
+
 A Three.js-based 3D data visualization dashboard that provides an intuitive, interactive data display interface.
 
 ## Features
