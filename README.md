@@ -2,6 +2,8 @@
 
 # 3D数据可视化仪表盘
 
+[![Netlify Status](https://api.netlify.com/api/v1/badges/90a1bd53-675a-44e1-8834-933ad4739dea/deploy-status)](https://app.netlify.com/sites/3d-data/deploys)
+
 基于Three.js的3D数据可视化仪表盘，提供直观、交互式的数据展示界面。
 
 ## 功能特点
