@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3D数据可视化仪表盘</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./src/css/style.css">
+  <!-- 引入示例数据 -->
+  <script type="module" src="src/js/data/sampleBarData.js"></script>
+  <script type="module" src="src/js/data/sampleNetworkData.js"></script>
+</head>
+<body>
+  <div class="container">
+    <!-- 侧边栏 - 控制面板 -->
+    <div class="sidebar">
+      <h2>3D数据可视化仪表盘</h2>
+      
+      <!-- 数据加载部分 -->
+      <h3>数据加载</h3>
+      <div class="form-group">
+        <label for="data-file">上传数据文件</label>
+        <input type="file" id="data-file" accept=".csv,.json">
+        <div class="tooltip">
+          <span class="tooltip-icon">?</span>
+          <span class="tooltip-text">支持CSV和JSON格式的数据文件</span>
+        </div>
+      </div>
+      
+      <!-- 可视化类型选择 -->
+      <h3>可视化类型</h3>
+      <div class="form-group">
+        <label for="visualization-type">选择可视化类型</label>
+        <select id="visualization-type">
+          <option value="bar-chart">3D柱状图</option>
+          <option value="network-graph">3D网络拓扑图</option>
+        </select>
+      </div>
+      
+      <!-- 可视化按钮 -->
+      <button id="visualize-btn" disabled>生成可视化</button>
+      
+      <!-- 错误消息 -->
+      <div class="error-message" id="error-message"></div>
+      
+      <!-- 示例数据 -->
+      <div class="sample-data">
+        <h3>示例数据</h3>
+        <button id="sample-bar-data">加载柱状图示例数据</button>
+        <button id="sample-network-data">加载网络图示例数据</button>
+      </div>
+      
+      <!-- 数据预览 -->
+      <div class="data-preview" id="data-preview">
+        <h3>数据预览</h3>
+        <div id="preview-content"></div>
+      </div>
+    </div>
+    
+    <!-- 可视化区域 -->
+    <div class="visualization-container" id="visualization-container">
+      <!-- 加载指示器 -->
+      <div class="loader" id="loader">
+        <div class="spinner"></div>
+        <div>加载中...</div>
+      </div>
+      
+      <!-- 控制面板 -->
+      <div class="controls">
+        <button id="reset-camera">重置视图</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 示例数据 -->
+  <script>
+    // 柱状图示例数据
+    const sampleBarData = [
+      { category: "产品A", sales: 120, profit: 45, cost: 75 },
+      { category: "产品B", sales: 90, profit: 30, cost: 60 },
+      { category: "产品C", sales: 180, profit: 80, cost: 100 },
+      { category: "产品D", sales: 70, profit: 20, cost: 50 },
+      { category: "产品E", sales: 150, profit: 60, cost: 90 }
+    ];
+    
+    // 网络图示例数据
+    const sampleNetworkData = {
+      nodes: [
+        { id: 1, name: "节点1", group: 0 },
+        { id: 2, name: "节点2", group: 1 },
+        { id: 3, name: "节点3", group: 1 },
+        { id: 4, name: "节点4", group: 2 },
+        { id: 5, name: "节点5", group: 2 },
+        { id: 6, name: "节点6", group: 3 },
+        { id: 7, name: "节点7", group: 3 }
+      ],
+      links: [
+        { source: 1, target: 2, value: 5 },
+        { source: 1, target: 3, value: 8 },
+        { source: 2, target: 3, value: 3 },
+        { source: 2, target: 4, value: 5 },
+        { source: 3, target: 5, value: 7 },
+        { source: 4, target: 5, value: 2 },
+        { source: 5, target: 6, value: 4 },
+        { source: 6, target: 7, value: 6 },
+        { source: 1, target: 7, value: 9 }
+      ]
+    };
+  </script>
+  
+  <!-- 使用Vite的开发服务器 -->
+  <script type="module" src="./src/js/main.js"></script>
+</body>
+</html>
