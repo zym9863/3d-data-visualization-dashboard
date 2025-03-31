@@ -17,10 +17,12 @@ export class NetworkGraph3D extends VisualizationBase {
     this.edgeColor = 0xaaaaaa;
     this.edgeWidth = 0.1;
     
-    // 布局属性
+    // 布局属性 - 优化参数以改善数据与视觉匹配
     this.graphSize = 15;
-    this.repulsionForce = 5;
-    this.attractionForce = 0.01;
+    this.repulsionForce = 8;     // 增加斥力，使节点分布更加均匀
+    this.attractionForce = 0.015; // 微调引力，保持连接节点的适当距离
+    this.edgeLengthFactor = 2.0;  // 边长度因子，影响连接节点间的距离
+    this.centerForce = 0.001;     // 向中心的引力，防止节点飘得太远
     
     // 动画属性
     this.animationDuration = 1000; // 毫秒
@@ -33,8 +35,9 @@ export class NetworkGraph3D extends VisualizationBase {
     
     // 物理模拟相关
     this.simulationActive = false;
-    this.simulationSteps = 100;
+    this.simulationSteps = 150;    // 增加模拟步数，使布局更稳定
     this.currentStep = 0;
+    this.dampingFactor = 0.85;     // 阻尼系数，控制节点运动
   }
   
   create() {
@@ -198,10 +201,22 @@ export class NetworkGraph3D extends VisualizationBase {
     textCanvas.width = 512;
     textCanvas.height = 128;
     context.font = 'bold 32px Arial';
-    context.fillStyle = 'white';
+    
+    // 根据节点组设置标签颜色，增强视觉关联
+    let labelColor = '#ffffff';
+    if (node.group !== undefined) {
+      const nodeColor = this.nodeColors[node.group % this.nodeColors.length];
+      // 将十六进制颜色转换为RGB字符串
+      const r = (nodeColor >> 16) & 255;
+      const g = (nodeColor >> 8) & 255;
+      const b = nodeColor & 255;
+      labelColor = `rgb(${r}, ${g}, ${b})`;
+    }
+    
+    context.fillStyle = labelColor;
     // 添加文本阴影以增强可读性
-    context.shadowColor = 'rgba(0, 0, 0, 0.5)';
-    context.shadowBlur = 4;
+    context.shadowColor = 'rgba(0, 0, 0, 0.7)';
+    context.shadowBlur = 5;
     context.shadowOffsetX = 2;
     context.shadowOffsetY = 2;
     context.fillText(String(labelText), 0, 24);
@@ -217,14 +232,52 @@ export class NetworkGraph3D extends VisualizationBase {
     const textGeometry = new THREE.PlaneGeometry(3, 0.8);
     const textMesh = new THREE.Mesh(textGeometry, textMaterial);
     
-    // 设置标签位置（在节点旁边）
-    textMesh.position.set(position.x + 0.7, position.y + 0.7, position.z);
+    // 存储关联的节点信息，用于动态更新位置
+    textMesh.userData = {
+      isLabel: true,
+      nodeId: node.id,
+      type: 'nodeLabel',
+      offset: new THREE.Vector3(0.8, 0.8, 0.2) // 可调整的偏移量
+    };
     
-    // 使标签始终面向相机
-    textMesh.userData.isLabel = true;
+    // 设置标签位置（在节点旁边，考虑节点大小）
+    const nodeSize = node.size || this.nodeSize;
+    textMesh.position.set(
+      position.x + nodeSize + textMesh.userData.offset.x,
+      position.y + textMesh.userData.offset.y,
+      position.z + textMesh.userData.offset.z
+    );
     
     this.scene.add(textMesh);
     this.objects.push(textMesh);
+    
+    // 添加连接线，增强标签与节点的视觉关联
+    const lineMaterial = new THREE.LineBasicMaterial({
+      color: new THREE.Color(labelColor),
+      transparent: true,
+      opacity: 0.6
+    });
+    
+    const lineGeometry = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(position.x, position.y, position.z),
+      new THREE.Vector3(
+        position.x + nodeSize + textMesh.userData.offset.x * 0.5,
+        position.y + textMesh.userData.offset.y * 0.5,
+        position.z + textMesh.userData.offset.z * 0.5
+      )
+    ]);
+    
+    const line = new THREE.Line(lineGeometry, lineMaterial);
+    line.userData = {
+      isLabelConnector: true,
+      nodeId: node.id,
+      labelMesh: textMesh
+    };
+    
+    this.scene.add(line);
+    this.objects.push(line);
+    
+    return { textMesh, line }; // 返回创建的对象，便于后续更新
   }
   
   createEdgeLabel(weight, sourceNode, targetNode) {
@@ -234,10 +287,19 @@ export class NetworkGraph3D extends VisualizationBase {
     textCanvas.width = 128;
     textCanvas.height = 64;
     context.font = 'bold 24px Arial';
-    context.fillStyle = 'white';
+    
+    // 根据边的权重设置颜色，增强数据与视觉的关联
+    // 权重越大，颜色越暖（从蓝到红）
+    const normalizedWeight = Math.min(Math.max(weight / 5, 0), 1); // 假设权重范围0-5
+    const r = Math.floor(normalizedWeight * 255);
+    const g = Math.floor(100 - normalizedWeight * 50);
+    const b = Math.floor(255 - normalizedWeight * 255);
+    const edgeLabelColor = `rgb(${r}, ${g}, ${b})`;
+    
+    context.fillStyle = edgeLabelColor;
     // 添加文本阴影以增强可读性
-    context.shadowColor = 'rgba(0, 0, 0, 0.5)';
-    context.shadowBlur = 4;
+    context.shadowColor = 'rgba(0, 0, 0, 0.7)';
+    context.shadowBlur = 5;
     context.shadowOffsetX = 2;
     context.shadowOffsetY = 2;
     context.fillText(weight.toFixed(1), 0, 20);
@@ -253,18 +315,80 @@ export class NetworkGraph3D extends VisualizationBase {
     const textGeometry = new THREE.PlaneGeometry(1.2, 0.6);
     const textMesh = new THREE.Mesh(textGeometry, textMaterial);
     
-    // 设置标签位置（在边的中间）
+    // 计算边的中点，但略微偏移以避免与边重叠
     const midX = (sourceNode.x + targetNode.x) / 2;
     const midY = (sourceNode.y + targetNode.y) / 2;
     const midZ = (sourceNode.z + targetNode.z) / 2;
     
-    textMesh.position.set(midX, midY + 0.4, midZ);
+    // 计算从边中点到标签的偏移向量
+    // 使用垂直于边的方向，确保标签不会与边重叠
+    const edgeVector = new THREE.Vector3(
+      targetNode.x - sourceNode.x,
+      targetNode.y - sourceNode.y,
+      targetNode.z - sourceNode.z
+    );
     
-    // 使标签始终面向相机
-    textMesh.userData.isLabel = true;
+    // 创建一个垂直于边的向量（使用叉积）
+    const upVector = new THREE.Vector3(0, 1, 0);
+    const offsetVector = new THREE.Vector3().crossVectors(edgeVector, upVector).normalize();
+    
+    // 如果偏移向量太小（边接近垂直），使用另一个方向
+    if (offsetVector.length() < 0.1) {
+      offsetVector.set(1, 0, 0).crossVectors(edgeVector, offsetVector).normalize();
+    }
+    
+    // 应用偏移，偏移量与权重成正比
+    const offsetMultiplier = 0.5 + normalizedWeight * 0.5; // 0.5-1.0
+    
+    // 存储关联的边信息，用于动态更新位置
+    textMesh.userData = {
+      isLabel: true,
+      type: 'edgeLabel',
+      sourceId: sourceNode.id,
+      targetId: targetNode.id,
+      weight: weight,
+      offsetVector: offsetVector,
+      offsetMultiplier: offsetMultiplier
+    };
+    
+    // 设置标签位置
+    textMesh.position.set(
+      midX + offsetVector.x * offsetMultiplier,
+      midY + offsetVector.y * offsetMultiplier + 0.2, // 略微向上偏移
+      midZ + offsetVector.z * offsetMultiplier
+    );
     
     this.scene.add(textMesh);
     this.objects.push(textMesh);
+    
+    // 添加从边中点到标签的连接线，增强视觉关联
+    const lineMaterial = new THREE.LineBasicMaterial({
+      color: new THREE.Color(edgeLabelColor),
+      transparent: true,
+      opacity: 0.6
+    });
+    
+    const lineGeometry = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(midX, midY, midZ),
+      new THREE.Vector3(
+        midX + offsetVector.x * offsetMultiplier * 0.8,
+        midY + offsetVector.y * offsetMultiplier * 0.8 + 0.1,
+        midZ + offsetVector.z * offsetMultiplier * 0.8
+      )
+    ]);
+    
+    const line = new THREE.Line(lineGeometry, lineMaterial);
+    line.userData = {
+      isEdgeLabelConnector: true,
+      sourceId: sourceNode.id,
+      targetId: targetNode.id,
+      labelMesh: textMesh
+    };
+    
+    this.scene.add(line);
+    this.objects.push(line);
+    
+    return { textMesh, line }; // 返回创建的对象，便于后续更新
   }
   
   update(camera) {
@@ -301,6 +425,9 @@ export class NetworkGraph3D extends VisualizationBase {
       this.currentStep++;
     }
     
+    // 更新标签和连接线位置
+    this.updateLabelsAndConnectors();
+    
     // 使标签始终面向相机
     if (camera) {
       this.objects.forEach(object => {
@@ -327,6 +454,7 @@ export class NetworkGraph3D extends VisualizationBase {
         const distance = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1;
         
         // 应用斥力（反比于距离的平方）
+        // 使用改进的斥力计算，在近距离时斥力更强
         const force = this.repulsionForce / (distance * distance);
         
         const fx = dx / distance * force;
@@ -357,12 +485,19 @@ export class NetworkGraph3D extends VisualizationBase {
       
       const distance = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1;
       
-      // 应用引力（正比于距离）
-      const force = this.attractionForce * distance;
+      // 获取边的权重（如果有）
+      const weight = link.value !== undefined ? link.value : (link.weight !== undefined ? link.weight : 1);
       
-      const fx = dx / distance * force;
-      const fy = dy / distance * force;
-      const fz = dz / distance * force;
+      // 计算理想边长度（根据权重调整）
+      // 权重越大，理想距离越短，表示关系越紧密
+      const idealDistance = this.edgeLengthFactor * (1 / (0.1 + weight * 0.2));
+      
+      // 应用引力（基于当前距离与理想距离的差异）
+      const forceFactor = (distance - idealDistance) * this.attractionForce;
+      
+      const fx = dx / distance * forceFactor;
+      const fy = dy / distance * forceFactor;
+      const fz = dz / distance * forceFactor;
       
       sourceNode.vx += fx;
       sourceNode.vy += fy;
@@ -373,12 +508,29 @@ export class NetworkGraph3D extends VisualizationBase {
       targetNode.vz -= fz;
     });
     
+    // 应用中心引力，防止节点飘得太远
+    this.data.nodes.forEach(node => {
+      // 计算到中心的距离
+      const dx = 0 - node.x;
+      const dy = 0 - node.y;
+      const dz = 0 - node.z;
+      
+      const distanceToCenter = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1;
+      
+      // 应用中心引力（距离越远，引力越大）
+      const centerForce = this.centerForce * distanceToCenter;
+      
+      node.vx += dx / distanceToCenter * centerForce;
+      node.vy += dy / distanceToCenter * centerForce;
+      node.vz += dz / distanceToCenter * centerForce;
+    });
+    
     // 更新节点位置
     this.data.nodes.forEach(node => {
       // 应用阻尼系数
-      node.vx *= 0.9;
-      node.vy *= 0.9;
-      node.vz *= 0.9;
+      node.vx *= this.dampingFactor;
+      node.vy *= this.dampingFactor;
+      node.vz *= this.dampingFactor;
       
       // 更新位置
       node.x += node.vx;
@@ -420,6 +572,131 @@ export class NetworkGraph3D extends VisualizationBase {
   // 缓动函数：缓出立方
   easeOutCubic(t) {
     return 1 - Math.pow(1 - t, 3);
+  }
+  
+  /**
+   * 更新标签和连接线位置
+   * 确保标签和连接线与节点和边的位置保持同步
+   */
+  updateLabelsAndConnectors() {
+    // 更新节点标签和连接线
+    this.objects.forEach(object => {
+      // 处理节点标签
+      if (object.userData && object.userData.type === 'nodeLabel') {
+        const nodeId = object.userData.nodeId;
+        const node = this.data.nodes.find(n => n.id === nodeId);
+        
+        if (node) {
+          // 找到对应的节点网格
+          const nodeMesh = this.nodes.find(n => n.data.id === nodeId)?.mesh;
+          
+          if (nodeMesh) {
+            const nodeSize = node.size || this.nodeSize;
+            const offset = object.userData.offset;
+            
+            // 更新标签位置
+            object.position.set(
+              nodeMesh.position.x + nodeSize + offset.x,
+              nodeMesh.position.y + offset.y,
+              nodeMesh.position.z + offset.z
+            );
+          }
+        }
+      }
+      
+      // 处理节点标签连接线
+      if (object.userData && object.userData.isLabelConnector) {
+        const nodeId = object.userData.nodeId;
+        const node = this.data.nodes.find(n => n.id === nodeId);
+        
+        if (node) {
+          // 找到对应的节点网格和标签
+          const nodeMesh = this.nodes.find(n => n.data.id === nodeId)?.mesh;
+          const labelMesh = object.userData.labelMesh;
+          
+          if (nodeMesh && labelMesh) {
+            // 更新连接线几何体
+            const positions = new Float32Array([
+              nodeMesh.position.x, nodeMesh.position.y, nodeMesh.position.z,
+              labelMesh.position.x - 0.4, labelMesh.position.y - 0.4, labelMesh.position.z - 0.1
+            ]);
+            
+            // 更新几何体
+            object.geometry.dispose();
+            object.geometry = new THREE.BufferGeometry();
+            object.geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+          }
+        }
+      }
+      
+      // 处理边标签
+      if (object.userData && object.userData.type === 'edgeLabel') {
+        const sourceId = object.userData.sourceId;
+        const targetId = object.userData.targetId;
+        
+        // 找到源节点和目标节点
+        const sourceNode = this.data.nodes.find(n => n.id === sourceId);
+        const targetNode = this.data.nodes.find(n => n.id === targetId);
+        
+        if (sourceNode && targetNode) {
+          // 计算边的中点
+          const midX = (sourceNode.x + targetNode.x) / 2;
+          const midY = (sourceNode.y + targetNode.y) / 2;
+          const midZ = (sourceNode.z + targetNode.z) / 2;
+          
+          // 计算从边中点到标签的偏移向量
+          const edgeVector = new THREE.Vector3(
+            targetNode.x - sourceNode.x,
+            targetNode.y - sourceNode.y,
+            targetNode.z - sourceNode.z
+          );
+          
+          // 使用存储的偏移向量和乘数
+          const offsetVector = object.userData.offsetVector;
+          const offsetMultiplier = object.userData.offsetMultiplier;
+          
+          // 更新标签位置
+          object.position.set(
+            midX + offsetVector.x * offsetMultiplier,
+            midY + offsetVector.y * offsetMultiplier + 0.2,
+            midZ + offsetVector.z * offsetMultiplier
+          );
+        }
+      }
+      
+      // 处理边标签连接线
+      if (object.userData && object.userData.isEdgeLabelConnector) {
+        const sourceId = object.userData.sourceId;
+        const targetId = object.userData.targetId;
+        
+        // 找到源节点和目标节点
+        const sourceNode = this.data.nodes.find(n => n.id === sourceId);
+        const targetNode = this.data.nodes.find(n => n.id === targetId);
+        
+        if (sourceNode && targetNode) {
+          // 计算边的中点
+          const midX = (sourceNode.x + targetNode.x) / 2;
+          const midY = (sourceNode.y + targetNode.y) / 2;
+          const midZ = (sourceNode.z + targetNode.z) / 2;
+          
+          // 找到对应的标签
+          const labelMesh = object.userData.labelMesh;
+          
+          if (labelMesh) {
+            // 更新连接线几何体
+            const positions = new Float32Array([
+              midX, midY, midZ,
+              labelMesh.position.x - 0.2, labelMesh.position.y - 0.1, labelMesh.position.z - 0.1
+            ]);
+            
+            // 更新几何体
+            object.geometry.dispose();
+            object.geometry = new THREE.BufferGeometry();
+            object.geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+          }
+        }
+      }
+    });
   }
   
   // 清除所有对象
