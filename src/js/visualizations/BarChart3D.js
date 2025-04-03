@@ -126,7 +126,7 @@ export class BarChart3D extends VisualizationBase {
   createLegend(numericFields) {
     // 创建图例（使用彩色立方体表示不同的数值字段）
     const legendGroup = new THREE.Group();
-    legendGroup.position.set(-9, 0.5, -9);
+    legendGroup.position.set(8, 10, 8);
     
     numericFields.forEach((field, index) => {
       // 创建图例立方体
@@ -539,7 +539,7 @@ export class BarChart3D extends VisualizationBase {
     this.updateAllBarsHeight();
     
     // 添加提示信息
-    this.showTooltip(`已聚焦于 ${field} 字段，点击同一柱子可重置视图`);
+    this.showTooltip(`已聚焦于 ${field} 字段，点击同一层柱状图的任一柱子可重置视图`);
   }
   
   /**
