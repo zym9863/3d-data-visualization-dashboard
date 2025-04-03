@@ -148,7 +148,13 @@ export class App {
     
     // 创建新的可视化
     this.currentVisualization = new VisualizationClass(this.scene, processedData);
-    this.currentVisualization.create();
+    
+    // 传递相机和渲染器参数给可视化组件
+    if (type === 'bar-chart') {
+      this.currentVisualization.create(this.camera, this.renderer);
+    } else {
+      this.currentVisualization.create();
+    }
   }
   
   /**
