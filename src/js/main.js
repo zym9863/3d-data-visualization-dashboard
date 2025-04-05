@@ -15,6 +15,7 @@ const loader = document.getElementById('loader');
 const resetCameraBtn = document.getElementById('reset-camera');
 const sampleBarDataBtn = document.getElementById('sample-bar-data');
 const sampleNetworkDataBtn = document.getElementById('sample-network-data');
+const sampleScatterDataBtn = document.getElementById('sample-scatter-data');
 const previewContent = document.getElementById('preview-content');
 
 // 初始化应用程序
@@ -224,6 +225,16 @@ sampleNetworkDataBtn.addEventListener('click', () => {
   
   // 自动选择网络图类型
   visualizationTypeSelect.value = 'network-graph';
+});
+
+// 加载散点图示例数据
+sampleScatterDataBtn.addEventListener('click', () => {
+  currentData = window.sampleScatterData;
+  createDataPreview(currentData);
+  visualizeBtn.disabled = false;
+  
+  // 自动选择散点图类型
+  visualizationTypeSelect.value = 'scatter-plot';
 });
 
 // 处理可视化类型变更

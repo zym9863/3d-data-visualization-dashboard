@@ -40,7 +40,7 @@ export class NetworkGraph3D extends VisualizationBase {
     this.dampingFactor = 0.85;     // 阻尼系数，控制节点运动
   }
   
-  create() {
+  create(camera, renderer) {
     if (!this.data || !this.data.nodes || !this.data.links) {
       console.error('无效的数据格式，网络图需要包含nodes和links属性');
       return;
@@ -48,6 +48,10 @@ export class NetworkGraph3D extends VisualizationBase {
     
     // 清除之前的可视化
     this.clear();
+    
+    // 保存相机和渲染器引用，以便在事件处理中使用
+    this.scene.userData.camera = camera;
+    this.scene.userData.renderer = renderer;
     
     // 创建地面网格
     this.createFloor();

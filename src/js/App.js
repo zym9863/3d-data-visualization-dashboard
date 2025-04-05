@@ -6,6 +6,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { BarChart3D } from './visualizations/BarChart3D.js';
 import { NetworkGraph3D } from './visualizations/NetworkGraph3D.js';
+import { ScatterPlot3D } from './visualizations/ScatterPlot3D.js';
 import { DataParser } from './utils/DataParser.js';
 
 export class App {
@@ -28,7 +29,8 @@ export class App {
     // 可视化类型
     this.visualizationTypes = {
       'bar-chart': BarChart3D,
-      'network-graph': NetworkGraph3D
+      'network-graph': NetworkGraph3D,
+      'scatter-plot': ScatterPlot3D
     };
     
     // 初始化
@@ -149,12 +151,8 @@ export class App {
     // 创建新的可视化
     this.currentVisualization = new VisualizationClass(this.scene, processedData);
     
-    // 传递相机和渲染器参数给可视化组件
-    if (type === 'bar-chart') {
-      this.currentVisualization.create(this.camera, this.renderer);
-    } else {
-      this.currentVisualization.create();
-    }
+    // 传递相机和渲染器参数给所有可视化组件
+    this.currentVisualization.create(this.camera, this.renderer);
   }
   
   /**
