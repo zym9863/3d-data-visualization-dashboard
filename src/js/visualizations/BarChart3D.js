@@ -194,19 +194,27 @@ export class BarChart3D extends VisualizationBase {
       });
       
       // 增大文本几何体尺寸以适应更大的字体
-      const textGeometry = new THREE.PlaneGeometry(2.5, 0.8);
+      const textGeometry = new THREE.PlaneGeometry(3.5, 1.2);
       const textMesh = new THREE.Mesh(textGeometry, textMaterial);
       
-      // 计算位置（考虑间距）
+      // 计算位置（考虑间距）- 与createBars方法中柱子的X位置计算保持一致
       const xPos = index * (this.barWidth + this.barSpacing) - (categories.length * (this.barWidth + this.barSpacing)) / 2 + this.barWidth / 2;
-      textMesh.position.set(xPos, 0, 0);
-      textMesh.rotation.x = -Math.PI / 2;
-      textMesh.rotation.z = Math.PI / 4; // 倾斜标签以便更好地阅读
+      
+      // 修改：将标签悬浮在空中，而不是平铺在地面上
+      // 设置Y轴位置为1.5，使标签悬浮在柱状图上方
+      textMesh.position.set(xPos, 1.5, 0);
+      
+      // 修改：调整旋转角度，使标签水平显示
+      // 移除Z轴的倾斜，使标签完全水平
+      textMesh.rotation.z = 0; // 水平显示标签
       
       xLabelGroup.add(textMesh);
     });
     
-    xLabelGroup.position.set(0, 0, 0);
+    // 将整个标签组放置在适当位置 - 修改Z轴位置，使标签与柱子正确对齐
+    // 不再向Z轴正方向移动，保持与柱子在同一Z轴平面上
+    // 向X轴正方向平移标签组，使标签更好地对齐柱状图
+    xLabelGroup.position.set(1, 0, 0);
     this.scene.add(xLabelGroup);
     this.objects.push(xLabelGroup);
     
