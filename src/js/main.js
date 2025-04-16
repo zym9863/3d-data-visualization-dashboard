@@ -16,6 +16,7 @@ const resetCameraBtn = document.getElementById('reset-camera');
 const sampleBarDataBtn = document.getElementById('sample-bar-data');
 const sampleNetworkDataBtn = document.getElementById('sample-network-data');
 const sampleScatterDataBtn = document.getElementById('sample-scatter-data');
+const sampleSurfaceDataBtn = document.getElementById('sample-surface-data');
 const previewContent = document.getElementById('preview-content');
 
 // 初始化应用程序
@@ -60,6 +61,9 @@ function createDataPreview(data) {
   } else if (data.nodes && data.links) {
     // 网络图格式
     createNetworkPreview(data);
+  } else if (data.values && Array.isArray(data.values)) {
+    // 表面图格式
+    createSurfacePreview(data);
   } else if (typeof data === 'object') {
     // 其他对象格式
     createObjectPreview(data);
@@ -149,6 +153,124 @@ function createObjectPreview(data) {
   previewContent.appendChild(pre);
 }
 
+// 创建表面图预览
+function createSurfacePreview(data) {
+  const { values, xLabels, yLabels, metadata } = data;
+  
+  const rowCount = values.length;
+  const colCount = values[0].length;
+  
+  // 计算最大值和最小值
+  let minValue = Infinity;
+  let maxValue = -Infinity;
+  
+  for (let i = 0; i < rowCount; i++) {
+    for (let j = 0; j < colCount; j++) {
+      const value = values[i][j];
+      if (value < minValue) minValue = value;
+      if (value > maxValue) maxValue = value;
+    }
+  }
+  
+  const info = document.createElement('div');
+  
+  // 添加标题（如果有）
+  if (metadata && metadata.title) {
+    const title = document.createElement('p');
+    title.innerHTML = `<strong>标题:</strong> ${metadata.title}`;
+    info.appendChild(title);
+  }
+  
+  // 添加网格大小信息
+  const gridInfo = document.createElement('p');
+  gridInfo.innerHTML = `<strong>数据网格大小:</strong> ${rowCount} × ${colCount}`;
+  info.appendChild(gridInfo);
+  
+  // 添加数值范围信息
+  const rangeInfo = document.createElement('p');
+  rangeInfo.innerHTML = `<strong>数值范围:</strong> ${minValue.toFixed(1)} - ${maxValue.toFixed(1)}`;
+  info.appendChild(rangeInfo);
+  
+  // 创建表格预览
+  const tableTitle = document.createElement('p');
+  tableTitle.innerHTML = '<strong>示例数据:</strong>';
+  info.appendChild(tableTitle);
+  
+  const table = document.createElement('table');
+  const thead = document.createElement('thead');
+  const tbody = document.createElement('tbody');
+  
+  // 创建表头
+  const headerRow = document.createElement('tr');
+  const cornerCell = document.createElement('th');
+  headerRow.appendChild(cornerCell);
+  
+  // 添加X轴标签（列标题）
+  const maxCols = Math.min(4, colCount);
+  for (let j = 0; j < maxCols; j++) {
+    const th = document.createElement('th');
+    th.textContent = xLabels ? xLabels[j] : `列${j+1}`;
+    headerRow.appendChild(th);
+  }
+  
+  if (colCount > 4) {
+    const ellipsis = document.createElement('th');
+    ellipsis.textContent = '...';
+    headerRow.appendChild(ellipsis);
+  }
+  
+  thead.appendChild(headerRow);
+  table.appendChild(thead);
+  
+  // 创建表格内容（最多显示3行）
+  const maxRows = Math.min(3, rowCount);
+  
+  for (let i = 0; i < maxRows; i++) {
+    const row = document.createElement('tr');
+    
+    // 添加Y轴标签（行标题）
+    const rowHeader = document.createElement('th');
+    rowHeader.textContent = yLabels ? yLabels[i] : `行${i+1}`;
+    row.appendChild(rowHeader);
+    
+    // 添加数据单元格
+    for (let j = 0; j < maxCols; j++) {
+      const td = document.createElement('td');
+      td.textContent = values[i][j].toFixed(1);
+      row.appendChild(td);
+    }
+    
+    if (colCount > 4) {
+      const ellipsis = document.createElement('td');
+      ellipsis.textContent = '...';
+      row.appendChild(ellipsis);
+    }
+    
+    tbody.appendChild(row);
+  }
+  
+  // 如果有更多行，添加省略号
+  if (rowCount > 3) {
+    const ellipsisRow = document.createElement('tr');
+    const ellipsisHeader = document.createElement('th');
+    ellipsisHeader.textContent = '...';
+    ellipsisRow.appendChild(ellipsisHeader);
+    
+    for (let j = 0; j < maxCols + (colCount > 4 ? 1 : 0); j++) {
+      const ellipsis = document.createElement('td');
+      ellipsis.textContent = '...';
+      ellipsisRow.appendChild(ellipsis);
+    }
+    
+    tbody.appendChild(ellipsisRow);
+  }
+  
+  table.appendChild(tbody);
+  info.appendChild(table);
+  
+  previewContent.appendChild(info);
+}
+
 // 处理文件上传
 dataFileInput.addEventListener('change', async (event) => {
   const file = event.target.files[0];
@@ -235,6 +357,22 @@ sampleScatterDataBtn.addEventListener('click', () => {
   
   // 自动选择散点图类型
   visualizationTypeSelect.value = 'scatter-plot';
+});
+
+// 加载表面图示例数据
+sampleSurfaceDataBtn.addEventListener('click', () => {
+  import('./data/sampleSurfaceData.js')
+    .then(module => {
+      currentData = module.default;
+      createDataPreview(currentData);
+      visualizeBtn.disabled = false;
+      
+      // 自动选择表面图类型
+      visualizationTypeSelect.value = 'surface-plot';
+    })
+    .catch(error => {
+      showError('加载示例数据失败: ' + error.message);
+    });
 });
 
 // 处理可视化类型变更

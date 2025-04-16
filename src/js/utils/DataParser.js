@@ -291,4 +291,62 @@ export class DataParser {
     console.error('无法将数据转换为柱状图格式');
     return [];
   }
+  
+  /**
+   * 将数据转换为表面图所需的格式
+   * @param {Array|Object} data - 原始数据
+   * @param {Object} options - 转换选项
+   * @returns {Object} 表面图数据对象，包含values二维数组和可选的xLabels、yLabels
+   */
+  static convertToSurfaceData(data, options = {}) {
+    // 如果数据已经是表面图格式（包含values二维数组），直接返回
+    if (data.values && Array.isArray(data.values) && data.values.length > 0 && Array.isArray(data.values[0])) {
+      return data;
+    }
+    
+    // 如果数据是二维数组，转换为表面图格式
+    if (Array.isArray(data) && data.length > 0 && Array.isArray(data[0])) {
+      return {
+        values: data
+      };
+    }
+    
+    // 如果数据是对象数组，尝试转换为二维网格
+    if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'object') {
+      const { xField, yField, valueField } = options;
+      
+      // 需要指定x、y和value字段
+      if (!xField || !yField || !valueField) {
+        console.error('转换为表面图需要指定xField、yField和valueField选项');
+        return { values: [[]] };
+      }
+      
+      // 提取唯一的x和y值
+      const xValues = [...new Set(data.map(item => item[xField]))].sort();
+      const yValues = [...new Set(data.map(item => item[yField]))].sort();
+      
+      // 创建二维网格
+      const values = Array(yValues.length).fill().map(() => Array(xValues.length).fill(0));
+      
+      // 填充数据
+      data.forEach(item => {
+        const xIndex = xValues.indexOf(item[xField]);
+        const yIndex = yValues.indexOf(item[yField]);
+        
+        if (xIndex !== -1 && yIndex !== -1) {
+          values[yIndex][xIndex] = item[valueField];
+        }
+      });
+      
+      return {
+        xLabels: xValues.map(String),
+        yLabels: yValues.map(String),
+        values: values
+      };
+    }
+    
+    // 无法转换，返回空表面图数据
+    console.error('无法将数据转换为表面图格式');
+    return { values: [[]] };
+  }
 }

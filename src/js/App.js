@@ -7,6 +7,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { BarChart3D } from './visualizations/BarChart3D.js';
 import { NetworkGraph3D } from './visualizations/NetworkGraph3D.js';
 import { ScatterPlot3D } from './visualizations/ScatterPlot3D.js';
+import { SurfacePlot3D } from './visualizations/SurfacePlot3D.js';
 import { DataParser } from './utils/DataParser.js';
 
 export class App {
@@ -30,7 +31,8 @@ export class App {
     this.visualizationTypes = {
       'bar-chart': BarChart3D,
       'network-graph': NetworkGraph3D,
-      'scatter-plot': ScatterPlot3D
+      'scatter-plot': ScatterPlot3D,
+      'surface-plot': SurfacePlot3D
     };
     
     // 初始化
@@ -146,6 +148,8 @@ export class App {
       processedData = DataParser.convertToNetworkData(visualizationData);
     } else if (type === 'bar-chart') {
       processedData = DataParser.convertToBarChartData(visualizationData);
+    } else if (type === 'surface-plot') {
+      processedData = DataParser.convertToSurfaceData(visualizationData);
     }
     
     // 创建新的可视化
