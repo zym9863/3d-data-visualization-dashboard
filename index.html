@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>3D数据可视化仪表盘</title>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="./src/css/style.css">
   <!-- 引入示例数据 -->
   <script type="module" src="src/js/data/sampleBarData.js"></script>
@@ -17,21 +18,21 @@
   <div class="container">
     <!-- 侧边栏 - 控制面板 -->
     <div class="sidebar">
-      <h2>3D数据可视化仪表盘</h2>
+      <h2><i class="fas fa-chart-bar"></i> 3D数据可视化仪表盘</h2>
 
       <!-- 数据加载部分 -->
-      <h3>数据加载</h3>
+      <h3><i class="fas fa-file-upload"></i> 数据加载</h3>
       <div class="form-group">
         <label for="data-file">上传数据文件</label>
         <input type="file" id="data-file" accept=".csv,.json">
         <div class="tooltip">
-          <span class="tooltip-icon">?</span>
+          <span class="tooltip-icon"><i class="fas fa-info-circle"></i></span>
           <span class="tooltip-text">支持CSV和JSON格式的数据文件</span>
         </div>
       </div>
 
       <!-- 可视化类型选择 -->
-      <h3>可视化类型</h3>
+      <h3><i class="fas fa-cubes"></i> 可视化类型</h3>
       <div class="form-group">
         <label for="visualization-type">选择可视化类型</label>
         <select id="visualization-type">
@@ -44,24 +45,24 @@
       </div>
 
       <!-- 可视化按钮 -->
-      <button id="visualize-btn" disabled>生成可视化</button>
+      <button id="visualize-btn" disabled><i class="fas fa-play"></i> 生成可视化</button>
 
       <!-- 错误消息 -->
       <div class="error-message" id="error-message"></div>
 
       <!-- 示例数据 -->
       <div class="sample-data">
-        <h3>示例数据</h3>
-        <button id="sample-bar-data">加载柱状图示例数据</button>
-        <button id="sample-network-data">加载网络图示例数据</button>
-        <button id="sample-scatter-data">加载散点图示例数据</button>
-        <button id="sample-surface-data">加载表面图示例数据</button>
-        <button id="sample-line-data">加载折线图示例数据</button>
+        <h3><i class="fas fa-database"></i> 示例数据</h3>
+        <button id="sample-bar-data"><i class="fas fa-chart-column"></i> 加载柱状图示例数据</button>
+        <button id="sample-network-data"><i class="fas fa-network-wired"></i> 加载网络图示例数据</button>
+        <button id="sample-scatter-data"><i class="fas fa-braille"></i> 加载散点图示例数据</button>
+        <button id="sample-surface-data"><i class="fas fa-mountain"></i> 加载表面图示例数据</button>
+        <button id="sample-line-data"><i class="fas fa-chart-line"></i> 加载折线图示例数据</button>
       </div>
 
       <!-- 数据预览 -->
       <div class="data-preview" id="data-preview">
-        <h3>数据预览</h3>
+        <h3><i class="fas fa-table"></i> 数据预览</h3>
         <div id="preview-content"></div>
       </div>
     </div>
@@ -76,7 +77,7 @@
 
       <!-- 控制面板 -->
       <div class="controls">
-        <button id="reset-camera">重置视图</button>
+        <button id="reset-camera"><i class="fas fa-sync-alt"></i> 重置视图</button>
       </div>
     </div>
   </div>
