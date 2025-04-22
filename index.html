@@ -11,13 +11,14 @@
   <script type="module" src="src/js/data/sampleNetworkData.js"></script>
   <script type="module" src="src/js/data/sampleScatterData.js"></script>
   <script type="module" src="src/js/data/sampleSurfaceData.js"></script>
+  <script type="module" src="src/js/data/sampleLineData.js"></script>
 </head>
 <body>
   <div class="container">
     <!-- 侧边栏 - 控制面板 -->
     <div class="sidebar">
       <h2>3D数据可视化仪表盘</h2>
-      
+
       <!-- 数据加载部分 -->
       <h3>数据加载</h3>
       <div class="form-group">
@@ -28,7 +29,7 @@
           <span class="tooltip-text">支持CSV和JSON格式的数据文件</span>
         </div>
       </div>
-      
+
       <!-- 可视化类型选择 -->
       <h3>可视化类型</h3>
       <div class="form-group">
@@ -38,15 +39,16 @@
           <option value="network-graph">3D网络拓扑图</option>
           <option value="scatter-plot">3D散点图</option>
           <option value="surface-plot">3D表面图</option>
+          <option value="line-chart">3D折线图</option>
         </select>
       </div>
-      
+
       <!-- 可视化按钮 -->
       <button id="visualize-btn" disabled>生成可视化</button>
-      
+
       <!-- 错误消息 -->
       <div class="error-message" id="error-message"></div>
-      
+
       <!-- 示例数据 -->
       <div class="sample-data">
         <h3>示例数据</h3>
@@ -54,15 +56,16 @@
         <button id="sample-network-data">加载网络图示例数据</button>
         <button id="sample-scatter-data">加载散点图示例数据</button>
         <button id="sample-surface-data">加载表面图示例数据</button>
+        <button id="sample-line-data">加载折线图示例数据</button>
       </div>
-      
+
       <!-- 数据预览 -->
       <div class="data-preview" id="data-preview">
         <h3>数据预览</h3>
         <div id="preview-content"></div>
       </div>
     </div>
-    
+
     <!-- 可视化区域 -->
     <div class="visualization-container" id="visualization-container">
       <!-- 加载指示器 -->
@@ -70,14 +73,14 @@
         <div class="spinner"></div>
         <div>加载中...</div>
       </div>
-      
+
       <!-- 控制面板 -->
       <div class="controls">
         <button id="reset-camera">重置视图</button>
       </div>
     </div>
   </div>
-  
+
   <!-- 示例数据 -->
   <script>
     // 柱状图示例数据
@@ -88,7 +91,7 @@
       { category: "产品D", sales: 70, profit: 20, cost: 50 },
       { category: "产品E", sales: 150, profit: 60, cost: 90 }
     ];
-    
+
     // 网络图示例数据
     const sampleNetworkData = {
       nodes: [
@@ -113,7 +116,7 @@
       ]
     };
   </script>
-  
+
   <!-- 使用Vite的开发服务器 -->
   <script type="module" src="./src/js/main.js"></script>
 </body>
