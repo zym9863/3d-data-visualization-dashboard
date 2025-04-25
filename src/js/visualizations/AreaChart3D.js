@@ -263,9 +263,8 @@ export class AreaChart3D extends VisualizationBase {
     canvas.width = 512; // 增加画布宽度
     canvas.height = 256; // 增加画布高度
 
-    // 清除背景，添加半透明背景以增加可读性
-    context.fillStyle = 'rgba(0, 0, 0, 0.5)';
-    context.fillRect(0, 0, canvas.width, canvas.height);
+    // 清除背景，不再添加半透明背景
+    context.clearRect(0, 0, canvas.width, canvas.height);
 
     // 设置文本样式 - 增加字体大小和粗细
     context.font = 'bold 36px Arial'; // 加粗并增大字体
@@ -273,9 +272,9 @@ export class AreaChart3D extends VisualizationBase {
     context.textAlign = 'center';
     context.textBaseline = 'middle';
 
-    // 添加文本阴影以增强可读性
-    context.shadowColor = 'rgba(0, 0, 0, 0.7)';
-    context.shadowBlur = 4;
+    // 增强文本阴影以提高可读性（没有背景的情况下）
+    context.shadowColor = 'rgba(0, 0, 0, 0.9)';
+    context.shadowBlur = 6;
     context.shadowOffsetX = 2;
     context.shadowOffsetY = 2;
 
