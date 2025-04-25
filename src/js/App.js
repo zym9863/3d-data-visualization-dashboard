@@ -9,6 +9,7 @@ import { NetworkGraph3D } from './visualizations/NetworkGraph3D.js';
 import { ScatterPlot3D } from './visualizations/ScatterPlot3D.js';
 import { SurfacePlot3D } from './visualizations/SurfacePlot3D.js';
 import { LineChart3D } from './visualizations/LineChart3D.js';
+import { AreaChart3D } from './visualizations/AreaChart3D.js';
 import { DataParser } from './utils/DataParser.js';
 
 export class App {
@@ -34,7 +35,8 @@ export class App {
       'network-graph': NetworkGraph3D,
       'scatter-plot': ScatterPlot3D,
       'surface-plot': SurfacePlot3D,
-      'line-chart': LineChart3D
+      'line-chart': LineChart3D,
+      'area-chart': AreaChart3D
     };
 
     // 初始化
@@ -152,8 +154,8 @@ export class App {
       processedData = DataParser.convertToBarChartData(visualizationData);
     } else if (type === 'surface-plot') {
       processedData = DataParser.convertToSurfaceData(visualizationData);
-    } else if (type === 'line-chart') {
-      // 折线图数据通常不需要特殊转换，但如果需要可以在这里添加
+    } else if (type === 'line-chart' || type === 'area-chart') {
+      // 折线图和面积图数据通常不需要特殊转换，但如果需要可以在这里添加
       processedData = visualizationData;
     }
 

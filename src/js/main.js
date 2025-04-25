@@ -18,6 +18,7 @@ const sampleNetworkDataBtn = document.getElementById('sample-network-data');
 const sampleScatterDataBtn = document.getElementById('sample-scatter-data');
 const sampleSurfaceDataBtn = document.getElementById('sample-surface-data');
 const sampleLineDataBtn = document.getElementById('sample-line-data');
+const sampleAreaDataBtn = document.getElementById('sample-area-data');
 const previewContent = document.getElementById('preview-content');
 
 // 初始化应用程序
@@ -66,8 +67,12 @@ function createDataPreview(data) {
     // 表面图格式
     createSurfacePreview(data);
   } else if (data.series && data.timePoints) {
-    // 折线图格式
-    createLineChartPreview(data);
+    // 折线图或面积图格式
+    if (visualizationTypeSelect.value === 'area-chart') {
+      createAreaChartPreview(data);
+    } else {
+      createLineChartPreview(data);
+    }
   } else if (typeof data === 'object') {
     // 其他对象格式
     createObjectPreview(data);
@@ -244,6 +249,114 @@ function createLineChartPreview(data) {
   }
 
   // 如果有更多城市，添加省略号
+  if (data.series.length > 5) {
+    const ellipsisRow = document.createElement('tr');
+    const ellipsisHeader = document.createElement('th');
+    ellipsisHeader.textContent = '...';
+    ellipsisRow.appendChild(ellipsisHeader);
+
+    for (let j = 0; j < maxMonths + (data.timePoints.length > 6 ? 1 : 0); j++) {
+      const ellipsis = document.createElement('td');
+      ellipsis.textContent = '...';
+      ellipsisRow.appendChild(ellipsis);
+    }
+
+    tbody.appendChild(ellipsisRow);
+  }
+
+  table.appendChild(tbody);
+  info.appendChild(table);
+
+  previewContent.appendChild(info);
+}
+
+// 创建面积图预览
+function createAreaChartPreview(data) {
+  if (!data || !data.series || !data.timePoints) {
+    previewContent.innerHTML = '<p>无效的面积图数据</p>';
+    return;
+  }
+
+  const info = document.createElement('div');
+
+  // 添加标题（如果有）
+  if (data.metadata && data.metadata.title) {
+    const title = document.createElement('p');
+    title.innerHTML = `<strong>标题:</strong> ${data.metadata.title}`;
+    info.appendChild(title);
+  }
+
+  // 添加数据系列信息
+  const seriesInfo = document.createElement('p');
+  seriesInfo.innerHTML = `<strong>区域数量:</strong> ${data.series.length}`;
+  info.appendChild(seriesInfo);
+
+  // 添加时间点信息
+  const timeInfo = document.createElement('p');
+  timeInfo.innerHTML = `<strong>时间点数量:</strong> ${data.timePoints.length}`;
+  info.appendChild(timeInfo);
+
+  // 创建表格预览
+  const tableTitle = document.createElement('p');
+  tableTitle.innerHTML = '<strong>示例数据:</strong>';
+  info.appendChild(tableTitle);
+
+  const table = document.createElement('table');
+  const thead = document.createElement('thead');
+  const tbody = document.createElement('tbody');
+
+  // 创建表头
+  const headerRow = document.createElement('tr');
+  const cornerCell = document.createElement('th');
+  cornerCell.textContent = '区域/月份';
+  headerRow.appendChild(cornerCell);
+
+  // 添加月份标签（最多显示6个）
+  const maxMonths = Math.min(6, data.timePoints.length);
+  for (let i = 0; i < maxMonths; i++) {
+    const th = document.createElement('th');
+    th.textContent = data.timePoints[i];
+    headerRow.appendChild(th);
+  }
+
+  if (data.timePoints.length > 6) {
+    const ellipsis = document.createElement('th');
+    ellipsis.textContent = '...';
+    headerRow.appendChild(ellipsis);
+  }
+
+  thead.appendChild(headerRow);
+  table.appendChild(thead);
+
+  // 创建表格内容（最多显示5个区域）
+  const maxAreas = Math.min(5, data.series.length);
+
+  for (let i = 0; i < maxAreas; i++) {
+    const row = document.createElement('tr');
+    const areaData = data.series[i];
+
+    // 添加区域名称
+    const areaHeader = document.createElement('th');
+    areaHeader.textContent = areaData.name;
+    row.appendChild(areaHeader);
+
+    // 添加数据单元格
+    for (let j = 0; j < maxMonths; j++) {
+      const td = document.createElement('td');
+      td.textContent = areaData.values[j];
+      row.appendChild(td);
+    }
+
+    if (data.timePoints.length > 6) {
+      const ellipsis = document.createElement('td');
+      ellipsis.textContent = '...';
+      row.appendChild(ellipsis);
+    }
+
+    tbody.appendChild(row);
+  }
+
+  // 如果有更多区域，添加省略号
   if (data.series.length > 5) {
     const ellipsisRow = document.createElement('tr');
     const ellipsisHeader = document.createElement('th');
@@ -495,6 +608,16 @@ sampleLineDataBtn.addEventListener('click', () => {
 
   // 自动选择折线图类型
   visualizationTypeSelect.value = 'line-chart';
+});
+
+// 加载面积图示例数据
+sampleAreaDataBtn.addEventListener('click', () => {
+  currentData = window.sampleAreaData;
+  createDataPreview(currentData);
+  visualizeBtn.disabled = false;
+
+  // 自动选择面积图类型
+  visualizationTypeSelect.value = 'area-chart';
 });
 
 // 处理可视化类型变更
