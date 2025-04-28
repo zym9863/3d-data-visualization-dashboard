@@ -86,11 +86,14 @@ body::after {
 
 .sidebar h2 {
   margin-bottom: 20px;
-  font-size: 1.5rem;
+  font-size: 1.4rem;
   border-bottom: 1px solid rgba(99, 179, 237, 0.3);
   padding-bottom: 10px;
   color: #63b3ed;
   text-shadow: 0 0 10px rgba(99, 179, 237, 0.5);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .sidebar h3 {

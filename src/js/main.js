@@ -19,6 +19,7 @@ const sampleScatterDataBtn = document.getElementById('sample-scatter-data');
 const sampleSurfaceDataBtn = document.getElementById('sample-surface-data');
 const sampleLineDataBtn = document.getElementById('sample-line-data');
 const sampleAreaDataBtn = document.getElementById('sample-area-data');
+const samplePieDataBtn = document.getElementById('sample-pie-data');
 const previewContent = document.getElementById('preview-content');
 
 // 初始化应用程序
@@ -618,6 +619,16 @@ sampleAreaDataBtn.addEventListener('click', () => {
 
   // 自动选择面积图类型
   visualizationTypeSelect.value = 'area-chart';
+});
+
+// 加载饼图示例数据
+samplePieDataBtn.addEventListener('click', () => {
+  currentData = window.samplePieData;
+  createDataPreview(currentData);
+  visualizeBtn.disabled = false;
+
+  // 自动选择饼图类型
+  visualizationTypeSelect.value = 'pie-chart';
 });
 
 // 处理可视化类型变更
