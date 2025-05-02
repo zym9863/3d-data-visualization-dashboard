@@ -11,6 +11,7 @@ import { SurfacePlot3D } from './visualizations/SurfacePlot3D.js';
 import { LineChart3D } from './visualizations/LineChart3D.js';
 import { AreaChart3D } from './visualizations/AreaChart3D.js';
 import { PieChart3D } from './visualizations/PieChart3D.js';
+import { HeatMap3D } from './visualizations/HeatMap3D.js';
 import { DataParser } from './utils/DataParser.js';
 
 export class App {
@@ -38,7 +39,8 @@ export class App {
       'surface-plot': SurfacePlot3D,
       'line-chart': LineChart3D,
       'area-chart': AreaChart3D,
-      'pie-chart': PieChart3D
+      'pie-chart': PieChart3D,
+      'heat-map': HeatMap3D
     };
 
     // 初始化
@@ -155,6 +157,9 @@ export class App {
     } else if (type === 'bar-chart') {
       processedData = DataParser.convertToBarChartData(visualizationData);
     } else if (type === 'surface-plot') {
+      processedData = DataParser.convertToSurfaceData(visualizationData);
+    } else if (type === 'heat-map') {
+      // 热力图数据格式与表面图类似，可以使用相同的转换方法
       processedData = DataParser.convertToSurfaceData(visualizationData);
     } else if (type === 'line-chart' || type === 'area-chart') {
       // 折线图和面积图数据通常不需要特殊转换，但如果需要可以在这里添加

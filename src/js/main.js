@@ -20,6 +20,7 @@ const sampleSurfaceDataBtn = document.getElementById('sample-surface-data');
 const sampleLineDataBtn = document.getElementById('sample-line-data');
 const sampleAreaDataBtn = document.getElementById('sample-area-data');
 const samplePieDataBtn = document.getElementById('sample-pie-data');
+const sampleHeatMapDataBtn = document.getElementById('sample-heat-map-data');
 const previewContent = document.getElementById('preview-content');
 
 // 初始化应用程序
@@ -65,8 +66,12 @@ function createDataPreview(data) {
     // 网络图格式
     createNetworkPreview(data);
   } else if (data.values && Array.isArray(data.values)) {
-    // 表面图格式
-    createSurfacePreview(data);
+    // 表面图或热力图格式
+    if (visualizationTypeSelect.value === 'heat-map') {
+      createHeatMapPreview(data);
+    } else {
+      createSurfacePreview(data);
+    }
   } else if (data.series && data.timePoints) {
     // 折线图或面积图格式
     if (visualizationTypeSelect.value === 'area-chart') {
@@ -497,6 +502,188 @@ function createSurfacePreview(data) {
   previewContent.appendChild(info);
 }
 
+// 创建热力图预览
+function createHeatMapPreview(data) {
+  const { values, xLabels, yLabels, metadata } = data;
+
+  const rowCount = values.length;
+  const colCount = values[0].length;
+
+  // 计算最大值和最小值
+  let minValue = Infinity;
+  let maxValue = -Infinity;
+
+  for (let i = 0; i < rowCount; i++) {
+    for (let j = 0; j < colCount; j++) {
+      const value = values[i][j];
+      if (value < minValue) minValue = value;
+      if (value > maxValue) maxValue = value;
+    }
+  }
+
+  const info = document.createElement('div');
+
+  // 添加标题（如果有）
+  if (metadata && metadata.title) {
+    const title = document.createElement('p');
+    title.innerHTML = `<strong>标题:</strong> ${metadata.title}`;
+    info.appendChild(title);
+  }
+
+  // 添加网格大小信息
+  const gridInfo = document.createElement('p');
+  gridInfo.innerHTML = `<strong>数据网格大小:</strong> ${rowCount} × ${colCount}`;
+  info.appendChild(gridInfo);
+
+  // 添加数值范围信息
+  const rangeInfo = document.createElement('p');
+  rangeInfo.innerHTML = `<strong>数值范围:</strong> ${minValue.toFixed(1)} - ${maxValue.toFixed(1)}`;
+  info.appendChild(rangeInfo);
+
+  // 创建热力图预览
+  const tableTitle = document.createElement('p');
+  tableTitle.innerHTML = '<strong>热力图数据预览:</strong>';
+  info.appendChild(tableTitle);
+
+  const table = document.createElement('table');
+  const thead = document.createElement('thead');
+  const tbody = document.createElement('tbody');
+  table.className = 'heatmap-preview';
+
+  // 创建表头
+  const headerRow = document.createElement('tr');
+  const cornerCell = document.createElement('th');
+  headerRow.appendChild(cornerCell);
+
+  // 添加X轴标签（列标题）
+  const maxCols = Math.min(6, colCount);
+  for (let j = 0; j < maxCols; j++) {
+    const th = document.createElement('th');
+    th.textContent = xLabels ? xLabels[j] : `列${j+1}`;
+    headerRow.appendChild(th);
+  }
+
+  if (colCount > 6) {
+    const ellipsis = document.createElement('th');
+    ellipsis.textContent = '...';
+    headerRow.appendChild(ellipsis);
+  }
+
+  thead.appendChild(headerRow);
+  table.appendChild(thead);
+
+  // 创建表格内容（最多显示5行）
+  const maxRows = Math.min(5, rowCount);
+
+  for (let i = 0; i < maxRows; i++) {
+    const row = document.createElement('tr');
+
+    // 添加Y轴标签（行标题）
+    const rowHeader = document.createElement('th');
+    rowHeader.textContent = yLabels ? yLabels[i] : `行${i+1}`;
+    row.appendChild(rowHeader);
+
+    // 添加数据单元格
+    for (let j = 0; j < maxCols; j++) {
+      const td = document.createElement('td');
+      const value = values[i][j];
+      td.textContent = value.toFixed(1);
+
+      // 根据数值设置背景颜色（热力图效果）
+      const normalizedValue = (value - minValue) / (maxValue - minValue);
+      const r = Math.round(normalizedValue * 255);
+      const b = Math.round((1 - normalizedValue) * 255);
+      td.style.backgroundColor = `rgb(${r}, 0, ${b})`;
+      td.style.color = normalizedValue > 0.5 ? 'white' : 'black';
+
+      row.appendChild(td);
+    }
+
+    if (colCount > 6) {
+      const ellipsis = document.createElement('td');
+      ellipsis.textContent = '...';
+      row.appendChild(ellipsis);
+    }
+
+    tbody.appendChild(row);
+  }
+
+  // 如果有更多行，添加省略号
+  if (rowCount > 5) {
+    const ellipsisRow = document.createElement('tr');
+    const ellipsisHeader = document.createElement('th');
+    ellipsisHeader.textContent = '...';
+    ellipsisRow.appendChild(ellipsisHeader);
+
+    for (let j = 0; j < maxCols + (colCount > 6 ? 1 : 0); j++) {
+      const ellipsis = document.createElement('td');
+      ellipsis.textContent = '...';
+      ellipsisRow.appendChild(ellipsis);
+    }
+
+    tbody.appendChild(ellipsisRow);
+  }
+
+  table.appendChild(tbody);
+  info.appendChild(table);
+
+  // 添加颜色图例
+  const legendContainer = document.createElement('div');
+  legendContainer.className = 'color-legend';
+
+  const legendTitle = document.createElement('p');
+  legendTitle.innerHTML = '<strong>颜色图例:</strong>';
+  legendContainer.appendChild(legendTitle);
+
+  const legend = document.createElement('div');
+  legend.className = 'legend-gradient';
+  legend.style.background = 'linear-gradient(to right, blue, purple, red)';
+  legendContainer.appendChild(legend);
+
+  const legendLabels = document.createElement('div');
+  legendLabels.className = 'legend-labels';
+
+  const minLabel = document.createElement('span');
+  minLabel.textContent = minValue.toFixed(1);
+  minLabel.className = 'legend-min';
+
+  const maxLabel = document.createElement('span');
+  maxLabel.textContent = maxValue.toFixed(1);
+  maxLabel.className = 'legend-max';
+
+  legendLabels.appendChild(minLabel);
+  legendLabels.appendChild(maxLabel);
+  legendContainer.appendChild(legendLabels);
+
+  info.appendChild(legendContainer);
+
+  previewContent.appendChild(info);
+
+  // 添加热力图预览的CSS样式
+  const style = document.createElement('style');
+  style.textContent = `
+    .heatmap-preview td {
+      text-align: center;
+      padding: 8px;
+      min-width: 40px;
+    }
+    .color-legend {
+      margin-top: 15px;
+    }
+    .legend-gradient {
+      height: 20px;
+      width: 100%;
+      border-radius: 4px;
+      margin: 5px 0;
+    }
+    .legend-labels {
+      display: flex;
+      justify-content: space-between;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
 // 处理文件上传
 dataFileInput.addEventListener('change', async (event) => {
   const file = event.target.files[0];
@@ -629,6 +816,16 @@ samplePieDataBtn.addEventListener('click', () => {
 
   // 自动选择饼图类型
   visualizationTypeSelect.value = 'pie-chart';
+});
+
+// 加载热力图示例数据
+sampleHeatMapDataBtn.addEventListener('click', () => {
+  currentData = window.sampleHeatMapData;
+  createDataPreview(currentData);
+  visualizeBtn.disabled = false;
+
+  // 自动选择热力图类型
+  visualizationTypeSelect.value = 'heat-map';
 });
 
 // 处理可视化类型变更
