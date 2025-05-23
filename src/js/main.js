@@ -21,6 +21,7 @@ const sampleLineDataBtn = document.getElementById('sample-line-data');
 const sampleAreaDataBtn = document.getElementById('sample-area-data');
 const samplePieDataBtn = document.getElementById('sample-pie-data');
 const sampleHeatMapDataBtn = document.getElementById('sample-heat-map-data');
+const sampleTreeDataBtn = document.getElementById('sample-tree-data');
 const previewContent = document.getElementById('preview-content');
 
 // 初始化应用程序
@@ -79,6 +80,9 @@ function createDataPreview(data) {
     } else {
       createLineChartPreview(data);
     }
+  } else if (data.children || (data.id && data.name)) {
+    // 树状图格式
+    createTreePreview(data);
   } else if (typeof data === 'object') {
     // 其他对象格式
     createObjectPreview(data);
@@ -154,6 +158,189 @@ function createNetworkPreview(data) {
   }
 
   previewContent.appendChild(info);
+}
+
+// 创建树状图预览
+function createTreePreview(data) {
+  if (!data || (!data.children && !data.id)) {
+    previewContent.innerHTML = '<p>无效的树状图数据</p>';
+    return;
+  }
+
+  const info = document.createElement('div');
+
+  // 添加标题（如果有）
+  if (data.metadata && data.metadata.title) {
+    const title = document.createElement('p');
+    title.innerHTML = `<strong>标题:</strong> ${data.metadata.title}`;
+    info.appendChild(title);
+  }
+
+  // 计算树的统计信息
+  const stats = calculateTreeStats(data);
+
+  // 添加树结构信息
+  const nodesInfo = document.createElement('p');
+  nodesInfo.innerHTML = `<strong>节点总数:</strong> ${stats.totalNodes}`;
+  info.appendChild(nodesInfo);
+
+  const depthInfo = document.createElement('p');
+  depthInfo.innerHTML = `<strong>最大深度:</strong> ${stats.maxDepth}`;
+  info.appendChild(depthInfo);
+
+  const leavesInfo = document.createElement('p');
+  leavesInfo.innerHTML = `<strong>叶子节点数:</strong> ${stats.leafNodes}`;
+  info.appendChild(leavesInfo);
+
+  // 创建树结构预览
+  const treeTitle = document.createElement('p');
+  treeTitle.innerHTML = '<strong>树结构预览:</strong>';
+  info.appendChild(treeTitle);
+
+  const treeContainer = document.createElement('div');
+  treeContainer.className = 'tree-preview';
+
+  // 递归创建树结构显示
+  const treeElement = createTreeElement(data, 0, 3); // 最多显示3层
+  treeContainer.appendChild(treeElement);
+
+  info.appendChild(treeContainer);
+
+  previewContent.appendChild(info);
+
+  // 添加树预览的CSS样式
+  const style = document.createElement('style');
+  style.textContent = `
+    .tree-preview {
+      font-family: monospace;
+      background: #f5f5f5;
+      padding: 10px;
+      border-radius: 4px;
+      margin: 10px 0;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .tree-node {
+      margin: 2px 0;
+      padding: 2px 0;
+    }
+    .tree-node-content {
+      display: inline-block;
+      padding: 2px 6px;
+      background: #e3f2fd;
+      border-radius: 3px;
+      margin-left: 4px;
+    }
+    .tree-node-value {
+      color: #666;
+      font-size: 0.9em;
+    }
+    .tree-indent {
+      color: #999;
+      margin-right: 4px;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+// 计算树的统计信息
+function calculateTreeStats(node, depth = 0) {
+  let totalNodes = 1;
+  let maxDepth = depth;
+  let leafNodes = 0;
+
+  if (!node.children || node.children.length === 0) {
+    leafNodes = 1;
+  } else {
+    node.children.forEach(child => {
+      const childStats = calculateTreeStats(child, depth + 1);
+      totalNodes += childStats.totalNodes;
+      maxDepth = Math.max(maxDepth, childStats.maxDepth);
+      leafNodes += childStats.leafNodes;
+    });
+  }
+
+  return { totalNodes, maxDepth, leafNodes };
+}
+
+// 创建树元素显示
+function createTreeElement(node, depth, maxDepth) {
+  const nodeDiv = document.createElement('div');
+  nodeDiv.className = 'tree-node';
+
+  // 创建缩进
+  const indent = '│  '.repeat(depth);
+  const connector = depth > 0 ? '├─ ' : '';
+
+  const indentSpan = document.createElement('span');
+  indentSpan.className = 'tree-indent';
+  indentSpan.textContent = indent + connector;
+  nodeDiv.appendChild(indentSpan);
+
+  // 创建节点内容
+  const contentSpan = document.createElement('span');
+  contentSpan.className = 'tree-node-content';
+
+  let nodeText = node.name || node.id || 'Node';
+  if (node.value !== undefined) {
+    const valueSpan = document.createElement('span');
+    valueSpan.className = 'tree-node-value';
+    valueSpan.textContent = ` (${node.value})`;
+    contentSpan.textContent = nodeText;
+    contentSpan.appendChild(valueSpan);
+  } else {
+    contentSpan.textContent = nodeText;
+  }
+
+  nodeDiv.appendChild(contentSpan);
+
+  // 递归添加子节点（如果在深度限制内）
+  if (node.children && depth < maxDepth) {
+    node.children.forEach((child, index) => {
+      const childElement = createTreeElement(child, depth + 1, maxDepth);
+      nodeDiv.appendChild(childElement);
+    });
+
+    // 如果有更多子节点但超出了显示限制
+    if (depth === maxDepth - 1 && node.children.length > 0) {
+      const moreDiv = document.createElement('div');
+      moreDiv.className = 'tree-node';
+
+      const moreIndent = '│  '.repeat(depth + 1);
+      const moreIndentSpan = document.createElement('span');
+      moreIndentSpan.className = 'tree-indent';
+      moreIndentSpan.textContent = moreIndent + '└─ ';
+      moreDiv.appendChild(moreIndentSpan);
+
+      const moreSpan = document.createElement('span');
+      moreSpan.style.color = '#999';
+      moreSpan.style.fontStyle = 'italic';
+      moreSpan.textContent = `... (${node.children.length} 个子节点)`;
+      moreDiv.appendChild(moreSpan);
+
+      nodeDiv.appendChild(moreDiv);
+    }
+  } else if (node.children && node.children.length > 0) {
+    // 显示子节点数量
+    const childCountDiv = document.createElement('div');
+    childCountDiv.className = 'tree-node';
+
+    const childIndent = '│  '.repeat(depth + 1);
+    const childIndentSpan = document.createElement('span');
+    childIndentSpan.className = 'tree-indent';
+    childIndentSpan.textContent = childIndent + '└─ ';
+    childCountDiv.appendChild(childIndentSpan);
+
+    const childSpan = document.createElement('span');
+    childSpan.style.color = '#999';
+    childSpan.style.fontStyle = 'italic';
+    childSpan.textContent = `... (${node.children.length} 个子节点)`;
+    childCountDiv.appendChild(childSpan);
+
+    nodeDiv.appendChild(childCountDiv);
+  }
+
+  return nodeDiv;
 }
 
 // 创建对象预览
@@ -826,6 +1013,16 @@ sampleHeatMapDataBtn.addEventListener('click', () => {
 
   // 自动选择热力图类型
   visualizationTypeSelect.value = 'heat-map';
+});
+
+// 加载树状图示例数据
+sampleTreeDataBtn.addEventListener('click', () => {
+  currentData = window.sampleTreeData;
+  createDataPreview(currentData);
+  visualizeBtn.disabled = false;
+
+  // 自动选择树状图类型
+  visualizationTypeSelect.value = 'tree-chart';
 });
 
 // 处理可视化类型变更

@@ -12,6 +12,7 @@ import { LineChart3D } from './visualizations/LineChart3D.js';
 import { AreaChart3D } from './visualizations/AreaChart3D.js';
 import { PieChart3D } from './visualizations/PieChart3D.js';
 import { HeatMap3D } from './visualizations/HeatMap3D.js';
+import { TreeChart3D } from './visualizations/TreeChart3D.js';
 import { DataParser } from './utils/DataParser.js';
 
 export class App {
@@ -40,7 +41,8 @@ export class App {
       'line-chart': LineChart3D,
       'area-chart': AreaChart3D,
       'pie-chart': PieChart3D,
-      'heat-map': HeatMap3D
+      'heat-map': HeatMap3D,
+      'tree-chart': TreeChart3D
     };
 
     // 初始化
@@ -167,6 +169,9 @@ export class App {
     } else if (type === 'pie-chart') {
       // 饼图数据通常不需要特殊转换
       processedData = visualizationData;
+    } else if (type === 'tree-chart') {
+      // 树状图数据转换
+      processedData = DataParser.convertToTreeData(visualizationData);
     }
 
     // 创建新的可视化
